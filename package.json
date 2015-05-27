@@ -1,0 +1,22 @@
+{
+  "name": "deamon",
+  "version": "1.0.0",
+  "description": "Node.js process deamon",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JacksonTian/deamon.git"
+  },
+  "keywords": [
+    "deamon"
+  ],
+  "author": "Jackson Tian",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JacksonTian/deamon/issues"
+  },
+  "homepage": "https://github.com/JacksonTian/deamon#readme"
+}
