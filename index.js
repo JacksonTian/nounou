@@ -85,6 +85,10 @@ module.exports = function (modulePath, options) {
   });
 
   deamon.on('exit', function (worker, code, signal) {
+    // child exit ok
+    if (code === 0) {
+      return;
+    }
     if (disconnects[worker.pid]) {
       delete disconnects[worker.pid];
       // worker disconnect first, exit expected
