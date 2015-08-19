@@ -64,7 +64,7 @@ module.exports = function (modulePath, options) {
 
   var _fork = function () {
     if (allow()) {
-      var cp = fork(modulePath);
+      var cp = fork(modulePath, options.args);
       deamon.emit('fork', cp);
       cp.on('disconnect', function () {
         deamon.emit('disconnect', cp);
