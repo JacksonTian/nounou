@@ -7,7 +7,7 @@ var fork = require('child_process').fork;
 module.exports = function (modulePath, options) {
   options = options || {};
   var refork = options.refork !== false;
-  var limit = options.limit || 60;
+  var limit = options.limit || 10;
   var duration = options.duration || 60000; // 1 min
   var disconnects = {};
   var disconnectCount = 0;
@@ -45,7 +45,7 @@ module.exports = function (modulePath, options) {
    */
 
   function onerror(err) {
-    console.error('[%s] [master:%s] master uncaughtException: %s', Date(), process.pid, err.stack);
+    console.error('[%s] [%s] master uncaughtException: %s', Date(), process.pid, err.stack);
     console.error(err);
     console.error('(total %d disconnect, %d unexpected exit)', disconnectCount, unexpectedCount);
   }
@@ -54,12 +54,11 @@ module.exports = function (modulePath, options) {
    * unexpectedExit default handler
    */
   function onUnexpected(worker, code, signal) {
-    var exitCode = worker.exitCode;
-    var err = new Error(util.format('worker:%s died unexpected (code: %s, signal: %s, suicide: %s, state: %s)',
-      worker.pid, exitCode, signal, worker.suicide, worker.state));
-    err.name = 'WorkerDiedUnexpectedError';
+    var err = new Error(util.format('worker:%s died unexpected (code: %s, signal: %s)',
+      worker.pid, code, signal));
+    err.name = 'UnexpectedWorkerDiedError';
 
-    console.error('[%s] [master:%s] (total %d disconnect, %d unexpected exit) %s',
+    console.error('[%s] [%s] (total %d disconnect, %d unexpected exit) %s',
       Date(), process.pid, disconnectCount, unexpectedCount, err.stack);
   }
 
@@ -73,6 +72,11 @@ module.exports = function (modulePath, options) {
       cp.on('exit', function (code, signal) {
         deamon.emit('exit', cp, code, signal);
       });
+      cp.on('message', function (message) {
+        if (message && message.type === 'suicide') {
+          cp.suicide = true;
+        }
+      });
     }
   };
 
@@ -81,12 +85,15 @@ module.exports = function (modulePath, options) {
   deamon.on('disconnect', function (worker) {
     disconnectCount++;
     disconnects[worker.pid] = new Date();
-    _fork();
+    if (!worker.suicide) {
+      _fork();
+    }
   });
 
   deamon.on('exit', function (worker, code, signal) {
-    // child exit ok
-    if (code === 0) {
+    // ignore suicied or exit normally worker
+    if (worker.suicide || code === 0) {
+      deamon.emit('expectedExit', worker, code, signal);
       return;
     }
     if (disconnects[worker.pid]) {
