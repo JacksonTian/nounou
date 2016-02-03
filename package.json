@@ -6,6 +6,9 @@
   "scripts": {
     "test": "make test"
   },
+  "bin": {
+    "nounou": "bin/nounou"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JacksonTian/nounou.git"
@@ -18,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/JacksonTian/nounou/issues"
   },
-  "homepage": "https://github.com/JacksonTian/nounou#readme"
+  "homepage": "https://github.com/JacksonTian/nounou#readme",
+  "files": [
+    "index.js"
+  ]
 }
