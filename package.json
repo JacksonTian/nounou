@@ -1,6 +1,6 @@
 {
   "name": "nounou",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Node.js process daemon",
   "main": "index.js",
   "scripts": {
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/JacksonTian/nounou#readme",
   "files": [
-    "index.js"
+    "index.js",
+    "bin"
   ]
 }
