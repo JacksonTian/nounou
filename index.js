@@ -8,6 +8,7 @@ module.exports = function (modulePath, options) {
   options = options || {};
   var refork = options.refork !== false;
   var limit = options.limit || 10;
+  var count = options.count || 1;
   var duration = options.duration || 60000; // 1 min
   var disconnects = {};
   var disconnectCount = 0;
@@ -63,30 +64,38 @@ module.exports = function (modulePath, options) {
   }
 
   var _fork = function () {
+    var cp = fork(modulePath, options.args);
+    deamon.emit('fork', cp);
+    cp.on('disconnect', function () {
+      deamon.emit('disconnect', cp);
+    });
+    cp.on('exit', function (code, signal) {
+      deamon.emit('exit', cp, code, signal);
+    });
+    cp.on('message', function (message) {
+      if (message && message.type === 'suicide') {
+        cp.suicide = true;
+      }
+    });
+  };
+
+  var _refork = function () {
     if (allow()) {
-      var cp = fork(modulePath, options.args);
-      deamon.emit('fork', cp);
-      cp.on('disconnect', function () {
-        deamon.emit('disconnect', cp);
-      });
-      cp.on('exit', function (code, signal) {
-        deamon.emit('exit', cp, code, signal);
-      });
-      cp.on('message', function (message) {
-        if (message && message.type === 'suicide') {
-          cp.suicide = true;
-        }
-      });
+      _refork();
     }
   };
 
-  _fork();
+  process.nextTick(function () {
+    for (var i = 0; i < count; i++) {
+      _fork();
+    }
+  });
 
   deamon.on('disconnect', function (worker) {
     disconnectCount++;
     disconnects[worker.pid] = new Date();
     if (!worker.suicide) {
-      _fork();
+      _refork();
     }
   });
 
@@ -102,7 +111,7 @@ module.exports = function (modulePath, options) {
       return;
     }
     unexpectedCount++;
-    _fork();
+    _refork();
     deamon.emit('unexpectedExit', worker, code, signal);
   });
 

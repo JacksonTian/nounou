@@ -11,8 +11,8 @@ cluster的fork形式仅能对单一进程使用。nounou适合其他情况，比
 编程式使用：
 
 ```js
-var nounou = require('nounou');
-var timerPath = '/path/to/timer.js';
+const nounou = require('nounou');
+const timerPath = '/path/to/timer.js';
 
 // 任务进程
 nounou(timerPath).on('fork', (worker) => {
@@ -34,6 +34,8 @@ nounou(timerPath).on('fork', (worker) => {
 
 ```sh
 $ nounou /path/to/timer.js
+# multi workers
+$ nounou /path/to/timer.js 2
 ```
 
 ## 正常退出

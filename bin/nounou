@@ -10,9 +10,10 @@ const args = process.argv.slice(2);
 const filepath = path.resolve(process.cwd(), args[0]);
 const name = path.basename(filepath, '.js');
 const pid = process.pid;
+const count = parseInt(args[1], 10) || 1;
 
 nounou(filepath, {
-  count: 1
+  count: count
 })
 .on('fork', function (worker) {
   console.log(`[${Date()}] [master:${pid}] [${name}:${worker.pid}]` +
