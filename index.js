@@ -81,7 +81,7 @@ module.exports = function (modulePath, options) {
 
   var _refork = function () {
     if (allow()) {
-      _refork();
+      _fork();
     }
   };
 
