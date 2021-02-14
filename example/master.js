@@ -1,9 +1,9 @@
 'use strict';
 
-var util = require('util');
-var path = require('path');
-var nounou = require('../');
-var timerPath = path.join(__dirname, 'test.js');
+const util = require('util');
+const path = require('path');
+const nounou = require('../');
+const timerPath = path.join(__dirname, 'test.js');
 
 // 任务进程
 nounou(timerPath).on('fork', function (worker) {
