@@ -1,21 +1,20 @@
 'use strict';
 
-var EventEmitter = require('events');
-var util = require('util');
-var fork = require('child_process').fork;
+const EventEmitter = require('events');
+const util = require('util');
+const fork = require('child_process').fork;
 
-module.exports = function (modulePath, options) {
-  options = options || {};
-  var refork = options.refork !== false;
-  var limit = options.limit || 10;
-  var count = options.count || 1;
-  var duration = options.duration || 60000; // 1 min
-  var disconnects = {};
+module.exports = function (modulePath, options = {}) {
+  const refork = options.refork !== false;
+  const limit = options.limit || 10;
+  const count = options.count || 1;
+  const duration = options.duration || 60000; // 1 min
+  const disconnects = {};
   var disconnectCount = 0;
   var unexpectedCount = 0;
 
-  var deamon = new EventEmitter();
-  var reforks = [];
+  const deamon = new EventEmitter();
+  const reforks = [];
 
   /**
    * allow refork
@@ -25,14 +24,14 @@ module.exports = function (modulePath, options) {
       return false;
     }
 
-    var times = reforks.push(Date.now());
+    const times = reforks.push(Date.now());
 
     if (times > limit) {
       reforks.shift();
     }
 
-    var span = reforks[reforks.length - 1] - reforks[0];
-    var canFork = reforks.length < limit || span > duration;
+    const span = reforks[reforks.length - 1] - reforks[0];
+    const canFork = reforks.length < limit || span > duration;
 
     if (!canFork) {
       deamon.emit('reachReforkLimit');
@@ -44,7 +43,6 @@ module.exports = function (modulePath, options) {
   /**
    * uncaughtException default handler
    */
-
   function onerror(err) {
     console.error('[%s] [%s] master uncaughtException: %s', Date(), process.pid, err.stack);
     console.error(err);
@@ -55,7 +53,7 @@ module.exports = function (modulePath, options) {
    * unexpectedExit default handler
    */
   function onUnexpected(worker, code, signal) {
-    var err = new Error(util.format('worker:%s died unexpected (code: %s, signal: %s)',
+    const err = new Error(util.format('worker:%s died unexpected (code: %s, signal: %s)',
       worker.pid, code, signal));
     err.name = 'UnexpectedWorkerDiedError';
 
@@ -64,7 +62,7 @@ module.exports = function (modulePath, options) {
   }
 
   var _fork = function () {
-    var cp = fork(modulePath, options.args);
+    const cp = fork(modulePath, options.args);
     deamon.emit('fork', cp);
     cp.on('disconnect', function () {
       deamon.emit('disconnect', cp);
@@ -105,11 +103,13 @@ module.exports = function (modulePath, options) {
       deamon.emit('expectedExit', worker, code, signal);
       return;
     }
+
     if (disconnects[worker.pid]) {
       delete disconnects[worker.pid];
       // worker disconnect first, exit expected
       return;
     }
+
     unexpectedCount++;
     _refork();
     deamon.emit('unexpectedExit', worker, code, signal);
@@ -118,11 +118,11 @@ module.exports = function (modulePath, options) {
   // defer to set the listeners
   // so you can listen this by your own
   process.nextTick(function () {
-    if (EventEmitter.listenerCount(process, 'uncaughtException') === 0) {
+    if (process.listenerCount('uncaughtException') === 0) {
       process.on('uncaughtException', onerror);
     }
 
-    if (EventEmitter.listenerCount(deamon, 'unexpectedExit') === 0) {
+    if (deamon.listenerCount('unexpectedExit') === 0) {
       deamon.on('unexpectedExit', onUnexpected);
     }
   });

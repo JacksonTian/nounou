@@ -5,29 +5,33 @@ const path = require('path');
 
 const nounou = require('../');
 
-const args = process.argv.slice(2);
+const [workerPath, count] = process.argv.slice(2);
 
-const filepath = path.resolve(process.cwd(), args[0]);
+const filepath = path.resolve(process.cwd(), workerPath);
 const name = path.basename(filepath, '.js');
+
 const pid = process.pid;
-const count = parseInt(args[1], 10) || 1;
+
+function utcTime() {
+  return new Date().toUTCString();
+}
 
 nounou(filepath, {
-  count: count
+  count: parseInt(count, 10) || 1
 })
 .on('fork', function (worker) {
-  console.log(`[${Date()}] [master:${pid}] [${name}:${worker.pid}]` +
+  console.log(`[${utcTime()}] [master:${pid}] [${name}:${worker.pid}]` +
   ` new worker start`);
 })
 .on('disconnect', function (worker) {
-  console.error(`[${Date()}] [master:${pid}] [${name}:${worker.pid}]` +
+  console.error(`[${utcTime()}] [master:${pid}] [${name}:${worker.pid}]` +
   ` disconnect, suicide: ${worker.suicide}.`);
 })
 .on('unexpectedExit', function (worker, code, signal) {
   var message = `${name} ${worker.pid} died (code: ${code}, signal: ${signal})`;
   var err = new Error(message);
   err.name = name + 'DiedError';
-  console.error(`${Date()} [${pid}] worker exit: ${err.stack}`);
+  console.error(`${utcTime()} [${pid}] worker exit: ${err.stack}`);
 }).on('reachReforkLimit', function () {
-  console.error(`${Date()} [${pid}] ${name} Too much refork!!!!!!`);
+  console.error(`${utcTime()} [${pid}] ${name} Too much refork!!!!!!`);
 });
